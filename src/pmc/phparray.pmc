@@ -174,9 +174,9 @@ PMC*           pipp_hash_pop(PARROT_INTERP, PippHashTable *ht);
 PMC*           pipp_hash_shift(PARROT_INTERP, PippHashTable *ht);
 PippBucket*    pipp_hash_unshift(PARROT_INTERP, PippHashTable *ht, PMC *p_val);
 
-void           pipp_hash_visit(PARROT_INTERP, PippHashTable *ht, visit_info *info);
-void           pipp_hash_freeze(PARROT_INTERP, PippHashTable *ht, visit_info *info);
-void           pipp_hash_thaw(PARROT_INTERP, PippHashTable *ht, visit_info *info);
+void           pipp_hash_visit(PARROT_INTERP, PippHashTable *ht, PMC *info);
+void           pipp_hash_freeze(PARROT_INTERP, PippHashTable *ht, PMC *info);
+void           pipp_hash_thaw(PARROT_INTERP, PippHashTable *ht, PMC *info);
 
 PippIsInt*     pipp_hash_get_intval(PARROT_INTERP, STRING *key);
 
@@ -881,7 +881,7 @@ PMC* pipp_hash_shift(PARROT_INTERP, PippHashTable *ht) {
 
 =over 4
 
-=item C<void pipp_hash_visit(PARROT_INTERP, PippHashTable *ht, visit_info *info)>
+=item C<void pipp_hash_visit(PARROT_INTERP, PippHashTable *ht, PMC *info)>
 
 Dispatch a call to VTABLE_visit to the appropriate internal function.
 
@@ -889,7 +889,7 @@ Dispatch a call to VTABLE_visit to the appropriate internal function.
 
 */
 
-void pipp_hash_visit(PARROT_INTERP, PippHashTable *ht, visit_info *info) {
+void pipp_hash_visit(PARROT_INTERP, PippHashTable *ht, PMC *info) {
     switch (info->what) {
         case VISIT_THAW_NORMAL:
         case VISIT_THAW_CONSTANTS:
@@ -909,7 +909,7 @@ void pipp_hash_visit(PARROT_INTERP, PippHashTable *ht, visit_info *info) {
 
 /*
 
-=item C<void pipp_hash_freeze(PARROT_INTERP, PippHashTable *ht, visit_info *info)>
+=item C<void pipp_hash_freeze(PARROT_INTERP, PippHashTable *ht, PMC *info)>
 
 Do most of the actual work of serializing this PippHash into C<info>.
 
@@ -917,7 +917,7 @@ Do most of the actual work of serializing this PippHash into C<info>.
 
 */
 
-void pipp_hash_freeze(PARROT_INTERP, PippHashTable *ht, visit_info *info) {
+void pipp_hash_freeze(PARROT_INTERP, PippHashTable *ht, PMC *info) {
     PippBucket *bkt;
     for (bkt = ht->tableHead; bkt != NULL; bkt = bkt->tableNext) {
         VTABLE_push_string(interp, info->image_io, bkt->key);
@@ -928,7 +928,7 @@ void pipp_hash_freeze(PARROT_INTERP, PippHashTable *ht, visit_info *info) {
 
 /*
 
-=item C<void pipp_hash_thaw(PARROT_INTERP, PippHashTable *ht, visit_info *info)>
+=item C<void pipp_hash_thaw(PARROT_INTERP, PippHashTable *ht, PMC *info)>
 
 Unserialize this PippHash into C<info>.
 
@@ -936,7 +936,7 @@ Unserialize this PippHash into C<info>.
 
 */
 
-void pipp_hash_thaw(PARROT_INTERP, PippHashTable *ht, visit_info *info) {
+void pipp_hash_thaw(PARROT_INTERP, PippHashTable *ht, PMC *info) {
     UINTVAL     i, element_count;
     STRING     *s_key;
     IMAGE_IO   *io;
@@ -2341,14 +2341,14 @@ Return 1 if this PHPArray has 1 or more elements.
 
 /*
 
-=item C<void visit(visit_info *info()>
+=item C<void visit(PMC *info()>
 
 Freeze or thaw the contents of this PHPArray.
 
 =cut
 
 */
-    VTABLE void visit(visit_info *info) {
+    VTABLE void visit(PMC *info) {
 
         PippHashTable *ht;
 
@@ -2360,16 +2360,16 @@ Freeze or thaw the contents of this PHPArray.
 
 /*
 
-=item C<void freeze(visit_info *info()>
+=item C<void freeze(PMC *info()>
 
 After C<visit()> has been called during the freeze process, this VTABLE function
-is used to add additional information about the PHPArray to the visit_info
+is used to add additional information about the PHPArray to the PMC
 struct.
 
 =cut
 
 */
-    VTABLE void freeze(visit_info *info) {
+    VTABLE void freeze(PMC *info) {
 
         PippHashTable *ht;
         PippBucket    *bkt;
@@ -2398,7 +2398,7 @@ struct.
 
 /*
 
-=item C<void thaw(visit_info *info()>
+=item C<void thaw(PMC *info()>
 
 Before C<visit()> is called during the thaw process, this VTABLE function is used
 to initialize the empty PHPArray.
@@ -2406,7 +2406,7 @@ to initialize the empty PHPArray.
 =cut
 
 */
-    VTABLE void thaw(visit_info *info) {
+    VTABLE void thaw(PMC *info) {
 
         PippHashTable *ht;
         IMAGE_IO      *io;
@@ -2432,7 +2432,7 @@ to initialize the empty PHPArray.
 
 /*
 
-=item C<void thawfinish(visit_info *info()>
+=item C<void thawfinish(PMC *info()>
 
 After C<visit()> is called during the thaw process, this VTABLE function is
 used to make any changes to the newly thawed PHPArray which could not be made
@@ -2441,7 +2441,7 @@ during the thaw process.
 =cut
 
 */
-    VTABLE void thawfinish(visit_info *info) {
+    VTABLE void thawfinish(PMC *info) {
 
         PippHashTable *ht;
         INTVAL         ip_pos = (INTVAL)info->extra;
