@@ -36,10 +36,10 @@ method TOP($/, $key) {
 
         # This makes sure that needed libs are loaded
         $main.loadinit().push(
-            PAST::Op.new( :inline("    $P0 = compreg 'Pipp'",
-                                  "    unless null $P0 goto pipp_pbc_is_loaded",
-                                  "        load_bytecode 'pipp.pbc'",
-                                  "  pipp_pbc_is_loaded:")
+            PAST::Op.new( :inline('    $P0 = compreg \'Pipp\'',
+                                  '    unless null $P0 goto pipp_pbc_is_loaded',
+                                  '        load_bytecode \'pipp.pbc\'',
+                                  '  pipp_pbc_is_loaded:')
             )
         );
 
@@ -753,7 +753,7 @@ method class_member_def($/) {
                 :value( ~$<literal>),
                 :returns( 'PhpString' )
             );
-        my $init_value := make_attr_init_closure($<literal>.ast);
+        $init_value := make_attr_init_closure($<literal>.ast);
         $init_value.named('init_value');
         $call_meta_attribute.push($init_value);
     }
