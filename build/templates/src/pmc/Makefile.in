@@ -4,9 +4,10 @@
 PERL          := @perl@
 CP            := @cp@
 RM_F          := @rm_f@
-PMCBUILD      := $(PERL) @build_dir@/tools/build/dynpmc.pl
 CC            := @cc@
 CFLAGS        := @ccflags@ @cc_shared@ @cc_debug@ @ccwarn@ @cc_hasjit@ @cg_flag@ @gc_flag@
+CC_OUT        := @cc_o_out@ 
+
 
 # Set up directories
 BUILD_DIR     := @build_dir@
@@ -15,12 +16,26 @@ DYNEXT_DIR    := ../../dynext
 VERSION_DIR   := @versiondir@
 LIB_DIR       := @libdir@$(VERSION_DIR)
 INSTALL_DIR   := $(LIB_DIR)/dynext
-
+BUILD_TOOLS_DIR := $(BUILD_DIR)/tools/build
+BUILD_LIB_DIR := $(BUILD_DIR)/blib/lib
+DYNEXT_DYNPMC = $(DYNEXT_DIR)/$(GROUP)$(LOAD_EXT)
+DYNEXT_DYNOPS = $(DYNEXT_DIR)/$(OPS)$(LOAD_EXT)
+DYNPMC        = $(PMC_DIR)/$(GROUP)$(LOAD_EXT)
+DYNOPS        = $(OPS_DIR)/$(OPS)$(LOAD_EXT)
+PMC_DIR		  = src/pmc
+# Set up building PMC's
+PMC2C 		  := $(PERL) $(BUILD_TOOLS_DIR)/pmc2c.pl
+#INCLUDES	  := -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/pmc -I$(INCLUDE_DIR)/parrot
+LD			  := @ld@
+LD_OUT		  := @ld_out@
+PMC2C_INCLUDES := --include src/pmc --include $(INCLUDE_DIR) --include $(INCLUDE_DIR)/pmc
+CINCLUDES     := -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/pmc
+LINKARGS      := $(LDFLAGS) $(LD_LOAD_FLAGS) $(LIBPARROT) @libs@ @icu_shared@
 # Set up extensions
 LOAD_EXT      := @load_ext@
 O             := @o@
 
-PMC_GROUP    := $(DYNEXT_DIR)/pipp_group$(LOAD_EXT)
+GROUP    := pipp_group
 
 PMCS          := \
   php \
@@ -43,9 +58,16 @@ PMC_SOURCES := \
   phpnull.pmc
 
 
-# default
-build: $(PMC_GROUP)
+$(DYNPMC): $(PMC_SOURCES)
+	$(PMC2C) --no-lines --dump $(PMC2C_INCLUDES) $(PMC_SOURCES)
+	$(PMC2C) --no-lines --c $(PMC2C_INCLUDES) $(PMC_SOURCES)
+	$(PMC2C) --no-lines --library $(GROUP) --c $(PMC_SOURCES)
+	$(CC) -c @cc_o_out@$(GROUP)$(O) -I. $(CINCLUDES) $(CFLAGS) $(GROUP).c
+	$(CC) -c -I. $(CINCLUDES) $(CFLAGS) *.c
+	$(LD) @ld_out@$(DYNPMC) $(GROUP)$(O) *$(O) $(LINKARGS)
 
+# default
+build : $(DYNPMC)
 
 # This is a listing of all targets, that are meant to be called by users
 help:
@@ -61,13 +83,7 @@ help:
 	@echo "  realclean:         Also clean up the Makefile."
 	@echo ""
 
-$(PMC_GROUP): $(PMC_SOURCES)
-	$(PMCBUILD) generate $(PMCS)
-	$(PMCBUILD) compile $(PMCS)
-	$(PMCBUILD) linklibs $(PMCS)
-	$(PMCBUILD) copy "--destination=$(DYNEXT_DIR)" $(PMCS)
-
-install:
+install : linklibs
 #IF(cygwin or hpux):	CHMOD 0775 "*$(LOAD_EXT)"
 	$(CP) "*$(LOAD_EXT)" $(INSTALL_DIR)
 

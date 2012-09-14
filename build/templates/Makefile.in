@@ -26,7 +26,7 @@ CHMOD         := @chmod@
 CP            := @cp@
 MKPATH        := @mkpath@
 RM_F          := @rm_f@
-NQP           := $(BUILD_DIR)/compilers/nqp/nqp.pbc
+NQP           := $(BIN_DIR)/parrot-nqp
 PCT           := $(BUILD_DIR)/runtime/parrot/library/PCT.pbc
 PBC_TO_EXE    := $(BUILD_DIR)/pbc_to_exe$(EXE)
 
@@ -176,7 +176,7 @@ src/pct/gen_grammar.pir: $(LIBRARY_DIR)/PGE/Perl6Grammar.pir src/pct/grammar.pg
             --output=src/pct/gen_grammar.pir src/pct/grammar.pg
 
 src/pct/gen_actions.pir: $(NQP) $(PCT) src/pct/actions.pm
-	$(PARROT) $(NQP) --output=src/pct/gen_actions.pir --target=pir src/pct/actions.pm
+	$(NQP) --output=src/pct/gen_actions.pir --target=pir src/pct/actions.pm
 
 pipp.pbc: \
   pipp.pir \
