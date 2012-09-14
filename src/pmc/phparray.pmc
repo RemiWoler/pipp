@@ -1066,6 +1066,7 @@ PippIsInt* pipp_hash_get_intval(PARROT_INTERP, STRING *key) {
 pmclass PhpArray
     dynpmc
     need_ext
+    auto_attrs
     hll      PHP
     group    pipp_group
     provides array
@@ -1238,6 +1239,7 @@ Store C<i_val> in this PHPArray, indexed by the INTVAL C<i_key>.
 =cut
 
 */
+/** TODO: UNUSED? THERE WERE TWO FUNCTION BODIES HERE WITH THE SAME NAME!
     VTABLE void set_string_keyed_int(INTVAL i_key, INTVAL i_val) {
 
         PippHashTable *ht;

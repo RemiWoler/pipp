@@ -22,6 +22,7 @@ pmclass PhpFloat
     provides scalar
     provides float
     dynpmc
+    auto_attrs
     group    pipp_group
     hll      PHP
     maps     Float {

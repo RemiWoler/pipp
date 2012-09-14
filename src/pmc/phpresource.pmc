@@ -20,6 +20,7 @@ src/pmc/phpresource.pmc - PHP Resource
 pmclass PhpResource
     provides ref
     dynpmc
+    auto_attrs
     group    pipp_group
     hll      PHP {
 

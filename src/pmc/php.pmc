@@ -18,6 +18,9 @@ This singleton PMC holds some static methods.
 */
 
 #include "pipp_private.h"
+#include "parrot/pmc.h"
+#include "parrot/gc_api.h"
+#include "parrot/compiler.h"
 
 INTVAL dynpmc_PhpArray;
 INTVAL dynpmc_PhpBoolean;
@@ -39,21 +42,12 @@ pmclass Php
 */
     void class_init() {
         Php_PMC = NULL;
-
-        if (pass) {
-            dynpmc_PhpArray = pmc_type(INTERP,
-              Parrot_str_new_constant(INTERP, "PhpArray"));
-            dynpmc_PhpBoolean = pmc_type(INTERP,
-              Parrot_str_new_constant(INTERP, "PhpBoolean"));
-            dynpmc_PhpFloat = pmc_type(INTERP,
-              Parrot_str_new_constant(INTERP, "PhpFloat"));
-            dynpmc_PhpInteger = pmc_type(INTERP,
-              Parrot_str_new_constant(INTERP, "PhpInteger"));
-            dynpmc_PhpString = pmc_type(INTERP,
-              Parrot_str_new_constant(INTERP, "PhpString"));
-            dynpmc_PhpNull = pmc_type(INTERP,
-              Parrot_str_new_constant(INTERP, "PhpNull"));
-        }
+        dynpmc_PhpArray = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpArray"));
+        dynpmc_PhpBoolean = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpBoolean"));
+        dynpmc_PhpFloat = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpFloat"));
+        dynpmc_PhpInteger = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpInteger"));
+        dynpmc_PhpString = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpString"));
+        dynpmc_PhpNull = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpNull"));
     }
 
 /*
