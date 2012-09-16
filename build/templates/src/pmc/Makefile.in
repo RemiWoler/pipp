@@ -7,6 +7,9 @@ RM_F          := @rm_f@
 CC            := @cc@
 CFLAGS        := @ccflags@ @cc_shared@ @cc_debug@ @ccwarn@ @cc_hasjit@ @cg_flag@ @gc_flag@
 CC_OUT        := @cc_o_out@ 
+LIBPARROT     := @inst_libparrot_ldflags@
+LDFLAGS		  := @ldflags@ @ld_debug@
+LD_LOAD_FLAGS := @ld_load_flags@
 
 
 # Set up directories
@@ -18,9 +21,9 @@ LIB_DIR       := @libdir@$(VERSION_DIR)
 INSTALL_DIR   := $(LIB_DIR)/dynext
 BUILD_TOOLS_DIR := $(BUILD_DIR)/tools/build
 BUILD_LIB_DIR := $(BUILD_DIR)/blib/lib
-DYNEXT_DYNPMC = $(DYNEXT_DIR)/$(GROUP)$(LOAD_EXT)
+DYNEXT_DYNPMC = $(DYNEXT_DIR)/$(GROUP)$(O)
 DYNEXT_DYNOPS = $(DYNEXT_DIR)/$(OPS)$(LOAD_EXT)
-DYNPMC        = $(PMC_DIR)/$(GROUP)$(LOAD_EXT)
+DYNPMC        = $(GROUP)$(LOAD_EXT)
 DYNOPS        = $(OPS_DIR)/$(OPS)$(LOAD_EXT)
 PMC_DIR		  = src/pmc
 # Set up building PMC's
@@ -49,7 +52,6 @@ PMCS          := \
 
 PMC_SOURCES := \
   php.pmc \
-  phparray.pmc \
   phpboolean.pmc \
   phpfloat.pmc \
   phpinteger.pmc \
@@ -62,12 +64,10 @@ $(DYNPMC): $(PMC_SOURCES)
 	$(PMC2C) --no-lines --dump $(PMC2C_INCLUDES) $(PMC_SOURCES)
 	$(PMC2C) --no-lines --c $(PMC2C_INCLUDES) $(PMC_SOURCES)
 	$(PMC2C) --no-lines --library $(GROUP) --c $(PMC_SOURCES)
-	$(CC) -c @cc_o_out@$(GROUP)$(O) -I. $(CINCLUDES) $(CFLAGS) $(GROUP).c
+	$(CC) -c @cc_o_out@$(DYNEXT_DIR)/$(GROUP)$(O) -I. $(CINCLUDES) $(CFLAGS) $(GROUP).c
+	$(RM_F) $(GROUP).c
 	$(CC) -c -I. $(CINCLUDES) $(CFLAGS) *.c
-	$(LD) @ld_out@$(DYNPMC) $(GROUP)$(O) *$(O) $(LINKARGS)
-
-# default
-build : $(DYNPMC)
+	$(LD) @ld_out@$(DYNPMC) $(DYNEXT_DYNPMC) *$(O) $(LINKARGS)
 
 # This is a listing of all targets, that are meant to be called by users
 help:
@@ -83,9 +83,9 @@ help:
 	@echo "  realclean:         Also clean up the Makefile."
 	@echo ""
 
-install : linklibs
+build: $(DYNPMC)
 #IF(cygwin or hpux):	CHMOD 0775 "*$(LOAD_EXT)"
-	$(CP) "*$(LOAD_EXT)" $(INSTALL_DIR)
+	$(CP) "*$(LOAD_EXT)" $(INSTALL_DIR)/
 
 # cleaning up
 clean:
