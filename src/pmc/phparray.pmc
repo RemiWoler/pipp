@@ -20,6 +20,7 @@ Implementation of the Array datatype.
 #include "pipp_private.h"
 
 #include "parrot/parrot.h"
+#include "parrot/imageio.h"
 
 /*arbitrary choice, as long as it stays constant */
 #define PIPP_HASH_SEED 0xF0848EED
@@ -890,21 +891,8 @@ Dispatch a call to VTABLE_visit to the appropriate internal function.
 */
 
 void pipp_hash_visit(PARROT_INTERP, PippHashTable *ht, PMC *info) {
-    switch (info->what) {
-        case VISIT_THAW_NORMAL:
-        case VISIT_THAW_CONSTANTS:
-            dprintf("pipp_hash_visit is dispatching to pipp_hash_thaw\n");
-            pipp_hash_thaw(interp, ht, info);
-            break;
-        case VISIT_FREEZE_NORMAL:
-        case VISIT_FREEZE_AT_DESTRUCT:
-            dprintf("pipp_hash_visit is dispatching to pipp_hash_freeze\n");
-            pipp_hash_freeze(interp, ht, info);
-            break;
-        default:
-            Parrot_ex_throw_from_c_args(interp, NULL, 1, "unimplemented visit mode");
-            break;
-    }
+    dprintf("CALL TO DEPRECATED FUNCTION! FIGURE OUT WHAT YOU NEED INSTEAD OF CALLING A SWITCH WRAPPER!");
+    Parrot_ex_throw_from_c_args(interp, NULL, 1, "unimplemented visit mode");
 }
 
 /*

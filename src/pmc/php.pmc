@@ -22,7 +22,6 @@ This singleton PMC holds some static methods.
 #include "parrot/gc_api.h"
 #include "parrot/compiler.h"
 
-INTVAL dynpmc_PhpArray;
 INTVAL dynpmc_PhpBoolean;
 INTVAL dynpmc_PhpFloat;
 INTVAL dynpmc_PhpInteger;
@@ -42,7 +41,6 @@ pmclass Php
 */
     void class_init() {
         Php_PMC = NULL;
-        dynpmc_PhpArray = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpArray"));
         dynpmc_PhpBoolean = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpBoolean"));
         dynpmc_PhpFloat = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpFloat"));
         dynpmc_PhpInteger = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpInteger"));
