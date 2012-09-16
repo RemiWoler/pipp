@@ -64,7 +64,7 @@ The code originates from Rakudo's eval.pir.
   slash_convert:
     $I0 = index name, '::'
     if $I0 < 0 goto have_name
-    substr name, $I0, 2, '/'
+    name = replace name, $I0, 2, '/'
     goto slash_convert
 
   have_name:
@@ -83,29 +83,32 @@ The code originates from Rakudo's eval.pir.
     inc_it = iter $P0
   inc_loop:
     unless inc_it goto inc_end
-    .local string basename, realfilename
+    .local string mybasename, realfilename
+    .local pmc os
+    .include "stat.pasm"
+    os = new ['OS']
     $S0 = shift inc_it
-    basename = concat $S0, '/'
-    basename .= name
+    mybasename = concat $S0, '/'
+    mybasename .= name
     if ismodule goto try_module
-    realfilename = basename
-    $I0 = stat realfilename, 0
+    realfilename = mybasename
+    $I0 = os.'stat'(realfilename)
     if $I0 goto eval_pipp
     goto inc_loop
   try_module:
-    realfilename = concat basename, '.pbc'
-    $I0 = stat realfilename, 0
+    realfilename = concat mybasename, '.pbc'
+    $I0 = os.'stat'(realfilename)
     if $I0 goto eval_parrot
-    realfilename = concat basename, '.pir'
-    $I0 = stat realfilename, 0
+    realfilename = concat mybasename, '.pir'
+    $I0 = os.'stat'(realfilename)
     if $I0 goto eval_parrot
-    realfilename = concat basename, '.pm'
-    $I0 = stat realfilename, 0
+    realfilename = concat mybasename, '.pm'
+    $I0 = os.'stat'(realfilename)
     if $I0 goto eval_pipp
     goto inc_loop
   inc_end:
-    $S0 = concat "Can't find ", basename
-    concat $S0, ' in $INCLUDE_PATH'
+    $S0 = concat "Can't find ", mybasename
+    $S0 = concat $S0, ' in $INCLUDE_PATH'
     'die'($S0)
     .return (0)
 

@@ -12,6 +12,7 @@ php_API.pir - PHP API Library
 
 =cut
 
+.loadlib 'io_ops'
 .include 'src/common/php_MACRO.pir'
 
 .sub '__onload' :anon :load :init

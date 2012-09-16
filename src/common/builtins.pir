@@ -2,6 +2,7 @@
 .HLL 'pipp'
 
 .loadlib 'pipp_group'
+.loadlib 'bit_ops'
 
 .include 'src/common/php_MACRO.pir'
 .include 'src/common/guts.pir'
@@ -93,8 +94,8 @@
 
 .sub 'prefix:~' :multi(PhpString)
     .param pmc a
-    bnots $P1
-    .return ($P1)
+    bnots a
+    .return (a)
 .end
 
 .sub 'prefix:~' :multi(_)
