@@ -63,7 +63,7 @@ Return a representation of this float in the same format as PHP's serialize func
         /* PHP's serialized floats stringify the exact value stored rather than
          * just the significant digits.  */
         serialized = Parrot_str_format_data(INTERP, "%.*f", 100, VTABLE_get_number(INTERP, SELF));
-        while (string_ord(INTERP, serialized, zero_index - 1) == '0')
+        while (Parrot_str_indexed(INTERP, serialized, zero_index - 1) == '0')
             zero_index--;
 
         serialized = Parrot_str_chopn(INTERP, serialized, 0 - zero_index);
@@ -86,7 +86,7 @@ Return a representation of this float in the same format as PHP's serialize func
 
 */
     METHOD acosh() {
-        PMC * const d  = pmc_new(INTERP, VTABLE_type(INTERP, SELF));
+        PMC * const d  = Parrot_pmc_new(INTERP, VTABLE_type(INTERP, SELF));
         SET_ATTR_fv(INTERP, d, acosh(SELF.get_number()));
         RETURN(PMC *d);
     }
@@ -99,7 +99,7 @@ Return a representation of this float in the same format as PHP's serialize func
 
 */
     METHOD asinh() {
-        PMC * const d  = pmc_new(INTERP, VTABLE_type(INTERP, SELF));
+        PMC * const d  = Parrot_pmc_new(INTERP, VTABLE_type(INTERP, SELF));
         SET_ATTR_fv(INTERP, d, asinh(SELF.get_number()));
         RETURN(PMC *d);
     }
@@ -112,7 +112,7 @@ Return a representation of this float in the same format as PHP's serialize func
 
 */
     METHOD atanh() {
-        PMC * const d  = pmc_new(INTERP, VTABLE_type(INTERP, SELF));
+        PMC * const d  = Parrot_pmc_new(INTERP, VTABLE_type(INTERP, SELF));
         SET_ATTR_fv(INTERP, d, atanh(SELF.get_number()));
         RETURN(PMC *d);
     }
@@ -125,7 +125,7 @@ Return a representation of this float in the same format as PHP's serialize func
 
 */
     METHOD PMC* is_finite() {
-        PMC *retval = pmc_new(INTERP, dynpmc_PhpBoolean);
+        PMC *retval = Parrot_pmc_new(INTERP, dynpmc_PhpBoolean);
 #if 1
         FLOATVAL d = SELF.get_number();
         INTVAL val = finite(d);
@@ -144,7 +144,7 @@ Return a representation of this float in the same format as PHP's serialize func
 
 */
     METHOD PMC* is_infinite() {
-        PMC *retval = pmc_new(INTERP, dynpmc_PhpBoolean);
+        PMC *retval = Parrot_pmc_new(INTERP, dynpmc_PhpBoolean);
 #if 1
         FLOATVAL d = SELF.get_number();
         INTVAL val = isinf(d);
@@ -163,7 +163,7 @@ Return a representation of this float in the same format as PHP's serialize func
 
 */
     METHOD PMC* is_nan() {
-        PMC *retval = pmc_new(INTERP, dynpmc_PhpBoolean);
+        PMC *retval = Parrot_pmc_new(INTERP, dynpmc_PhpBoolean);
 #if 1
         FLOATVAL d = SELF.get_number();
         INTVAL val = isnan(d);
