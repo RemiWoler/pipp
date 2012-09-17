@@ -382,7 +382,7 @@ Unlike in Perl 5, the newline before the delimiter is not part of the string.
     goto scan_xo_char_loop
   scan_xo_char_end:
     $S1 = chr decnum
-    concat literal, $S1
+    literal = concat literal, $S1
   scan_xo_end:
     goto scan_loop
 

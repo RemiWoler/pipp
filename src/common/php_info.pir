@@ -13,6 +13,7 @@ php_info.pir - PHP info Standard Library
 =cut
 
 .include 'src/common/php_MACRO.pir'
+.loadlib 'sys_ops'
 
 .const string PHP_LOGO_GUID     = 'PHPE9568F34-D428-11d2-A769-00AA001ACF42'
 .const string PHP_EGG_LOGO_GUID = 'PHPE9568F36-D428-11d2-A769-00AA001ACF42'
@@ -39,7 +40,8 @@ php_info.pir - PHP info Standard Library
 .end
 
 .sub 'logo_guid' :anon
-    $I0 = time
+    time $N0
+    $I0 = $N0
     $P0 = decodetime $I0
     $I0 = $P0[.TM_MON]
     unless $I0 == 4 goto L1

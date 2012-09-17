@@ -13,6 +13,8 @@ php_math.pir - PHP math Standard Library
 =cut
 
 .const num PI = 3.14159265358979323846
+.loadlib 'trans_ops'
+.loadlib 'math_ops'
 
 .sub 'longtobase' :anon
     .param int value
@@ -701,7 +703,7 @@ Formats a number with grouped thousands
     .ROUND_WITH_FUZZ(d, dec)
     $S1 = dec
     $S0 = concat '%.', $S1
-    $S0 = concat 'f'
+    $S0 = concat $S0, 'f'
     new $P0, 'FixedFloatArray'
     set $P0, 1
     $P0[0] = d

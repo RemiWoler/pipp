@@ -222,8 +222,8 @@ NOT IMPLEMENTED.
   L4:
     unless i < num_chunks goto L5
     chunk = substr str, cursor, chunk_len
-    concat res, chunk
-    concat res, ending
+    res = concat res, chunk
+    res = concat res, ending
     inc i
     cursor = cursor + chunk_len
     goto L4
@@ -231,8 +231,8 @@ NOT IMPLEMENTED.
 
     unless rest_len > 0 goto L6
     chunk = substr str, cursor
-    concat res, chunk
-    concat res, ending
+    res = concat res, chunk
+    res = concat res, ending
   L6:
 
     .RETURN_STRING(res)
@@ -311,14 +311,14 @@ NOT IMPLEMENTED.
 
     $P0 = shift it
     $S0 = $P0
-    concat res, $S0
+    res = concat res, $S0
     $I1 = 0
     args_loop:
         unless it goto args_end
-        concat res, glue
+        res = concat res, glue
         $P0 = shift it
         $S0 = $P0
-        concat res, $S0
+        res = concat res, $S0
         goto args_loop
     args_end:
 
@@ -919,7 +919,7 @@ Makes a string lowercase
   L1:
     $P1 = shift args
     $S0 = $P1
-    downcase $S0
+    $S0 = downcase $S0
     .RETURN_STRING($S0)
 .end
 
@@ -939,7 +939,7 @@ Makes a string uppercase
   L1:
     $P1 = shift args
     $S0 = $P1
-    upcase $S0
+    $S0 = upcase $S0
     .RETURN_STRING($S0)
 .end
 
@@ -1054,7 +1054,7 @@ Makes a string's first character uppercase
     .RETURN_EMPTY_STRING()
   L2:
     $S2 = substr $S1, 0, 1
-    upcase $S2
+    $S2 = upcase $S2
     $S3 = substr $S1, 1
     $S0 = concat $S2, $S3
     .RETURN_STRING($S0)

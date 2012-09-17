@@ -420,18 +420,18 @@ Quote regular expression characters plus an optional character
     $S1 = shift $P0
     $I0 = index '.\+*?[^]$(){}=!<>|:', $S1
     if $I0 < 0 goto L6
-    concat $S0, "\\"
-    concat $S0, $S1
+    $S0 = concat $S0, "\\"
+    $S0 = concat $S0, $S1
     goto L4
   L6:
     unless $S1 == "\0" goto L7
-    concat $S0, "\\000"
+    $S0 = concat $S0, "\\000"
     goto L4
   L7:
     unless $S1 == delim goto L8
-    concat $S0, "\\"
+    $S0 = concat $S0, "\\"
   L8:
-    concat $S0, $S1
+    $S0 = concat $S0, $S1
     goto L4
   L5:
     .RETURN_STRING($S0)

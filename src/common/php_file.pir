@@ -31,6 +31,7 @@ Returns the filename component of the path
 =cut
 
 .include 'sysinfo.pasm'
+.loadlib 'sys_ops'
 
 .sub 'basename'
     .param pmc args :slurpy

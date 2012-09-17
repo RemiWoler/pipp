@@ -15,8 +15,8 @@ php_rand.pir - PHP rand Standard Library
 .include 'src/common/php_MACRO.pir'
 
 .sub '__onload' :anon :load
-    load_bytecode 'Math/Random/mt19937ar.pbc'
-    $P0 = new [ 'Math'; 'Random'; 'MT' ]
+    load_bytecode 'Math/Rand.pbc'
+    $P0 = get_global [ 'Math'; 'Rand' ], 'rand'
     set_hll_global 'mt19937', $P0
 .end
 

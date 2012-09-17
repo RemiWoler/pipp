@@ -69,6 +69,7 @@ Bernhard Schmalhofer - L<Bernhard.Schmalhofer@gmx.de>
 .include 'src/pct/gen_actions.pir'
 .include 'src/pct/quote_expression.pir'
 .include 'iglobals.pasm'
+.loadlib 'io_ops'
 
 .HLL '_pipp'
 
@@ -292,7 +293,7 @@ ERROR:
     .local string pir_fn, cmd
     .local int ret
     pir_fn =  nqp_source_fn
-    substr pir_fn, -3, 3, 'pir'     # change extension from '.nqp' to '.pir'
+    pir_fn = replace pir_fn, -3, 3, 'pir'     # change extension from '.nqp' to '.pir'
     cmd  = build_dir
     cmd .= '/parrot '
     cmd .= build_dir
