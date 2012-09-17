@@ -39,3 +39,6 @@ parrot
 /pipp_test_run.tar.gz
 /t/php/*.php
 /t/php/*.out
+
+#IDE directories
+/nbproject
