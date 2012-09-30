@@ -1,18 +1,15 @@
 /*
-Copyright (C) 2008-2009, The Perl Foundation.
 
 =head1 NAME
 
-src/pmc/phparray.pmc - PHP Array
+pmc/phparray.pmc - PHP Array
 
 =head1 DESCRIPTION
 
-Implementation of the PhpArray datatype. This is a wrapper class around a 
-C<ResizablePmcArray> which is filled with C<PmcPair> PMC's. This way we 
-mimic a complex datatype that behaves as both a C<PmcArray> as well as a C<Hash>, just
-like the actual Array datatype in PHP
+C<PhpArray> extends C<OrderedHash> to provide Pipp-specific
+array behavior.
 
-=head2 VTABLE Functions
+=head2 Methods
 
 =over 4
 
@@ -20,72 +17,24 @@ like the actual Array datatype in PHP
 
 */
 
-
-#define PMC_array(x)    ((Pipp_PhpArray_attributes *)PMC_data(x))->pmc_array
-#define PMC_size(x)     (PMC_array(x))->size;
-#define PMC_pointer(x)  ((Pipp_PhpArray_attributes *)PMC_data(x))->pointer
-
-
-
 #include "pipp_private.h"
-
 #include "parrot/parrot.h"
 #include "parrot/imageio.h"
 
-pmclass PhpArray
-        dynpmc
+pmclass PhpArray 
+        extends OrderedHash 
         need_ext
+        dynpmc
+        provides array 
+        provides hash 
         auto_attrs
-        hll     PHP
-        group   pipp_group
-        provides array
-        provides hash
-        maps    OrderedHash
-        maps    resizablePmcArray {
+        group    pipp_group
+        hll      PHP {
     
-    ATTR ResizablePmcArray data;
-    ATTR intval pointer 0;
-    
-/*
-
-=item C<void init_int(INTVAL size)>
-
-Initializes the array.
-
-=cut
-
-*/
-
-    
-    VTABLE void init_int(INTVAL size) {
-        PMC * const val = Parrot_pmc_new(INTERP, enum_class_ResizablePmcArray);
-        val.init_int(size);
-        PMC_array = val;
+    VTABLE STRING* name() {
+        return Parrot_str_new_constant(INTERP, "array");
     }
-    
-/*
-
-=item C<void set_integer_native(INTVAL size)>
-
-Resizes the array to C<size> elements.
-
-=cut
-
-*/
-
-    VTABLE void set_integer_native(INTVAL size) {
-        if (!PMC_array(SELF)) {
-            SELF.init_int(size);
-        } else {
-            PMC_array.set_integer_native(size)
-        }
-    }
-
-    
 }
-
-
-
 
 /*
  * Local variables:

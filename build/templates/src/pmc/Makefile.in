@@ -68,7 +68,7 @@ $(DYNPMC): $(PMC_SOURCES)
 	$(CC) -c @cc_o_out@$(DYNEXT_DIR)/$(GROUP)$(O) -I. $(CINCLUDES) $(CFLAGS) $(GROUP).c
 	$(RM_F) $(GROUP).c
 	$(CC) -c -I. $(CINCLUDES) $(CFLAGS) *.c
-	$(LD) @ld_out@$(DYNPMC) $(DYNEXT_DYNPMC) *$(O) $(LINKARGS)
+	$(LD) @ld_out@../../../parrot/runtime/parrot/dynext/$(DYNPMC) $(DYNEXT_DYNPMC) *$(O) $(LINKARGS)
 
 # This is a listing of all targets, that are meant to be called by users
 help:
