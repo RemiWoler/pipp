@@ -90,7 +90,6 @@ Bernhard Schmalhofer - L<Bernhard.Schmalhofer@gmx.de>
     load_bytecode 'config.pbc'
 
     load_bytecode 'P6object.pbc'
-
     # load bytecode from the standard search pathes
     # the current dir for an uninstalled Pipp
     # versiondir/library for an installed Pipp
@@ -333,7 +332,7 @@ ERROR:
     prog = shift argv
 
     .local pmc getopts
-    getopts = new 'Getopt::Obj'
+    getopts = new ['Getopt'; 'Obj']
 
     # Pipp specific command line options
     push getopts, 'f=s'                # source file

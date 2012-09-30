@@ -57,7 +57,8 @@ PMC_SOURCES := \
   phpinteger.pmc \
   phpresource.pmc \
   phpstring.pmc \
-  phpnull.pmc
+  phpnull.pmc \
+  phparray.pmc
 
 
 $(DYNPMC): $(PMC_SOURCES)

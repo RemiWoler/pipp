@@ -27,6 +27,7 @@ INTVAL dynpmc_PhpFloat;
 INTVAL dynpmc_PhpInteger;
 INTVAL dynpmc_PhpString;
 INTVAL dynpmc_PhpNull;
+INTVAL dynpmc_PhpArray;
 
 static PMC * Php_PMC;
 
@@ -46,6 +47,7 @@ pmclass Php
         dynpmc_PhpInteger = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpInteger"));
         dynpmc_PhpString = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpString"));
         dynpmc_PhpNull = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpNull"));
+		dynpmc_PhpArray = Parrot_pmc_get_type_str(interp, string_from_literal(interp, "PhpArray"));
     }
 
 /*
