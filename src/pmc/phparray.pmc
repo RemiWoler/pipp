@@ -32,7 +32,7 @@ pmclass PhpArray
         hll      PHP {
     
     VTABLE STRING* name() {
-        return Parrot_str_new_constant(INTERP, "array");
+        return Parrot_str_new_constant(INTERP, "PHPArray");
     }
 }
 
