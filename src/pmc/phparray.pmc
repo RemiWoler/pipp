@@ -1,28 +1,95 @@
 /*
+Copyright (C) 2008-2009, The Perl Foundation.
+
+=head1 NAME
+
+src/pmc/phparray.pmc - PHP Array
+
+=head1 DESCRIPTION
+
+Implementation of the PhpArray datatype. This is a wrapper class around a 
+C<ResizablePmcArray> which is filled with C<PmcPair> PMC's. This way we 
+mimic a complex datatype that behaves as both a C<PmcArray> as well as a C<Hash>, just
+like the actual Array datatype in PHP
+
+=head2 VTABLE Functions
+
+=over 4
+
+=cut
+
+*/
+
+
+#define PMC_array(x)    ((Pipp_PhpArray_attributes *)PMC_data(x))->pmc_array
+#define PMC_size(x)     (PMC_array(x))->size;
+#define PMC_pointer(x)  ((Pipp_PhpArray_attributes *)PMC_data(x))->pointer
+
+
+
+#include "pipp_private.h"
+
+#include "parrot/parrot.h"
+#include "parrot/imageio.h"
+
+pmclass PhpArray
+        dynpmc
+        need_ext
+        auto_attrs
+        hll     PHP
+        group   pipp_group
+        provides array
+        provides hash
+        maps    OrderedHash
+        maps    resizablePmcArray {
+    
+    ATTR ResizablePmcArray data;
+    ATTR intval pointer 0;
+    
+/*
+
+=item C<void init_int(INTVAL size)>
+
+Initializes the array.
+
+=cut
+
+*/
+
+    
+    VTABLE void init_int(INTVAL size) {
+        PMC * const val = Parrot_pmc_new(INTERP, enum_class_ResizablePmcArray);
+        val.init_int(size);
+        PMC_array = val;
+    }
+    
+/*
+
+=item C<void set_integer_native(INTVAL size)>
+
+Resizes the array to C<size> elements.
+
+=cut
+
+*/
+
+    VTABLE void set_integer_native(INTVAL size) {
+        if (!PMC_array(SELF)) {
+            SELF.init_int(size);
+        } else {
+            PMC_array.set_integer_native(size)
+        }
+    }
+
+    
+}
+
+
+
+
+/*
  * Local variables:
  *   c-file-style: "parrot"
  * End:
  * vim: expandtab shiftwidth=4:
  */
-pmclass PhpArray
-    dynpmc
-    need_ext
-    auto_attrs
-    hll      PHP
-    group    pipp_group
-    provides hash
-	extends  OrderedHash
-    maps     OrderedHash {
-
-    ATTR struct pipp_hash_table *hash_table;
-
-	void class_init() {}
-	
-	void init() {
-		SUPER();
-	};
-	
-	void set_pmc(PARROT_INTERP, ARGMOD(PMC *_self), PMC *value)) {
-		SELF.set_pmc(value);
-	}
-}
