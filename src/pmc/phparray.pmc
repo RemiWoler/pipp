@@ -16,6 +16,7 @@ array behavior.
 =cut
 
 */
+#include "pipp_private.h"
 
 pmclass PhpArray 
         need_ext
@@ -23,7 +24,7 @@ pmclass PhpArray
         provides array 
         provides hash 
         auto_attrs
-        maps    Array
+        maps    ResizablePMCArray
         maps    Hash
         group    pipp_group
         hll      PHP 
@@ -42,8 +43,8 @@ Create new instance of PhpArray
 */
 
     VTABLE void init() {
-        Pipp_PhpArray_attributes * const attrs =
-            (Pipp_PhpArray_attributes*) PMC_data(SELF);
+        Parrot_PhpArray_attributes * const attrs =
+            (Parrot_PhpArray_attributes*) PMC_data(SELF);
         attrs->hash = Parrot_pmc_new(INTERP, enum_class_Hash);
         attrs->first = PMCNULL;
         attrs->last = PMCNULL;
@@ -382,18 +383,19 @@ PHPArray, just make a clone.
 
 */
     VTABLE void assign_pmc(PMC *src) {
-        Pipp_PhpArray_attributes * attrs = PARROT_ORDEREDHASH(SELF);
-        
-        Parrot_hash_destroy(INTERP, attrs->hash);
+        Parrot_PhpArray_attributes * attrs = 
+            (Parrot_PhpArray_attributes*) PMC_data(SELF);
 
-        if (PMC_type(src) == PMC_type(SELF)) {
-            Pipp_PhpArray_attributes *src_attrs =
-                PARROT_ORDEREDHASH(src);
+        if (src->vtable->base_type == SELF->vtable->base_type) {
+            Parrot_PhpArray_attributes *src_attrs =
+                (Parrot_PhpArray_attributes*) PARROT_ORDEREDHASH(src);
             Hash * const src_hash = (Hash *)VTABLE_get_pointer(INTERP, src_attrs->hash);
             VTABLE_set_pointer(INTERP, attrs->hash, src_hash);
         } else if (VTABLE_does(INTERP, src, CONST_STRING(INTERP, "array")) ||
                    (VTABLE_does(INTERP, src, CONST_STRING(INTERP, "hash")))) {
-
+            Hash * const my_hash = (Hash *)VTABLE_get_pointer(INTERP, attrs->hash);
+        if (my_hash)
+            Parrot_hash_destroy(INTERP, my_hash);
             PMC *iter = VTABLE_get_iter(INTERP, src);
 
             while (VTABLE_get_bool(INTERP, iter)) {
@@ -438,7 +440,7 @@ C<src> and C<SELF>, the value from C<SELF> will be used.
 
 */
     VTABLE void i_add(PMC *src) {
-        if (PMC_type(SELF) == PMC_type(src) ||
+if (src->vtable->base_type == SELF->vtable->base_type ||
                 VTABLE_does(INTERP, src, CONST_STRING(INTERP, "array")) ||
                 VTABLE_does(INTERP, src, CONST_STRING(INTERP, "hash"))){
 
@@ -654,9 +656,9 @@ behavior of PHP's C<next()> function.
     METHOD next() {
 /** TODO: THIS METHOD CLASHES WITH PHP BEHAVIOR!!! IT SHOULD RETURN THE VALUE OF THE NEW ARRAY POSITION **/
 /** TODO: MOVE THIS TO THE ITERATOR! **/
-        PMC *iter;
+        PMC *iter, *ret;
         GET_ATTR_ptr(INTERP, SELF, iter);
-        PMC *ret = VTABLE_shift_pmc(INTERP, iter);
+        ret = VTABLE_shift_pmc(INTERP, iter);
         RETURN(void);
     }
 
@@ -730,6 +732,7 @@ pointer.
 /** TODO: THIS METHOD CLASHES WITH PHP BEHAVIOR!!! IT SHOULD RETURN THE VALUE OF THE NEW ARRAY POSITION **/
 /** TODO: IMPLEMENT THIS - Good luck! **/
 /** TODO: MOVE THIS TO THE ITERATOR! **/
+        STRING        *s_key;
         s_key = CONST_STRING(INTERP, "");
 
         RETURN(STRING *s_key);
@@ -750,6 +753,7 @@ This method has no side-effects and does not modify the internal pointer.
 /** TODO: THIS METHOD CLASHES WITH PHP BEHAVIOR!!! IT SHOULD RETURN THE VALUE OF THE NEW ARRAY POSITION **/
 /** TODO: IMPLEMENT THIS - Good luck! **/
 /** TODO: MOVE THIS TO THE ITERATOR! **/
+        PMC           *p_val;
         p_val = PMCNULL;
 
         RETURN(PMC *p_val);
@@ -819,7 +823,8 @@ be returned.
 
         }
         else {**/
-            keys = pmc_new(INTERP, dynpmc_PhpBoolean);
+        PMC *keys;
+            keys = Parrot_pmc_new(INTERP, dynpmc_PhpBoolean);
             VTABLE_set_integer_native(INTERP, keys, 0);
         RETURN(PMC *keys);
     }
@@ -850,8 +855,6 @@ broken, the code will throw an exception.
     METHOD sanity_check() {
 
     }
-
-}
 
 /*
 
