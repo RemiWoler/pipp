@@ -17,6 +17,13 @@ array behavior.
 
 */
 #include "pipp_private.h"
+STRING* arrkeyfromint(PARROT_INTERP, INTVAL idx);
+STRING* arrkeyfromint(PARROT_INTERP, INTVAL idx) {
+    STRING * const fmt = CONST_STRING(interp, "\1%d");
+    STRING * const key = Parrot_sprintf_s(interp, fmt, idx);
+    return key;
+}
+
 
 pmclass PhpArray 
         need_ext
@@ -72,6 +79,21 @@ In any other case, an exception will be thrown.
         else
             SELF.assign_pmc(p);
     }
+    
+    
+    
+    VTABLE PMC *get_pmc_keyed_int(INTVAL idx) {
+        return SELF.get_pmc_keyed_str(arrkeyfromint(INTERP, idx));
+    }
+    
+    VTABLE void set_pmc_keyed_int(INTVAL idx, PMC *val) {
+        SELF.set_pmc_keyed_str(arrkeyfromint(INTERP, idx), val);
+        //char *cstring = Parrot_str_to_cstring(INTERP, arrkeyfromint(INTERP, idx));
+        //fprintf(stderr, "%s%s", "Stored key: ",  cstring);
+        //Parrot_str_free_cstring(cstring);
+    }
+    
+    
 /*
 
 =item C<INTVAL pop_integer()>
@@ -82,16 +104,8 @@ Delete the element at the end of this PHPArray, returning its value as an INTVAL
 
 */
     VTABLE INTVAL pop_integer() {
-/** TODO IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        p_val = pipp_hash_pop(INTERP, ht);
-
-        return VTABLE_get_integer(INTERP, p_val);
-**/
+        PMC * const val = SELF.pop_pmc();
+        return VTABLE_get_integer(INTERP, val);
     }
 
 /*
@@ -104,13 +118,16 @@ Delete the element at the end of this PHPArray, returning its value as a PMC.
 
 */
     VTABLE PMC *pop_pmc() {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        return pipp_hash_pop(INTERP, ht);
-**/
+        //get the last item off the stack
+        Parrot_PhpArray_attributes * attrs = 
+            (Parrot_PhpArray_attributes*) PMC_data(SELF);
+        PMC * retval = VTABLE_get_pmc_keyed_int(INTERP, attrs->last, 
+                ORDERED_HASH_ITEM_VALUE);
+        //now delete the last item
+        PMC * delete_key = VTABLE_get_pmc_keyed_int(INTERP, attrs->last, 
+                ORDERED_HASH_ITEM_KEY);
+        SELF.delete_keyed(delete_key);
+        return retval;
     }
 
 /*
@@ -123,16 +140,8 @@ Delete the element at the end of this PHPArray, returning its value as a STRING.
 
 */
     VTABLE STRING *pop_string() {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        p_val = pipp_hash_pop(INTERP, ht);
-
-        return VTABLE_get_string(INTERP, p_val);
-**/
+        PMC * const val = SELF.pop_pmc();
+        return VTABLE_get_string(INTERP, val);
     }
 
 /*
@@ -145,16 +154,8 @@ Delete the element at the end of this PHPArray, returning its value as a FLOATVA
 
 */
     VTABLE FLOATVAL pop_float() {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        p_val = pipp_hash_pop(INTERP, ht);
-
-        return VTABLE_get_number(INTERP, p_val);
-**/
+        PMC * const val = SELF.pop_pmc();
+        return VTABLE_get_number(INTERP, val);
     }
 
 /*
@@ -169,39 +170,12 @@ elements will be renumbered according to insertion order.
 
 */
     VTABLE void unshift_integer(INTVAL i_val) {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val = pmc_new(INTERP, enum_class_Integer);
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
+        PMC *p_val = Parrot_pmc_new(INTERP, enum_class_Integer);
         VTABLE_set_integer_native(INTERP, p_val, i_val);
-
-        pipp_hash_unshift(INTERP, ht, p_val);
-**/
+        SELF.unshift_pmc(p_val);
     }
-
-/*
-
-=item C<void unshift_pmc(PMC *p_val)>
-
-Add a PMC with the value C<p_val> to the beginning of this PHPArray.  C<p_val>
-will be keyed by the INTVAL 0 and all other numerically indexed elements will
-be renumbered according to insertion order.
-
-=cut
-
-*/
-    VTABLE void unshift_pmc(PMC *p_val) {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        pipp_hash_unshift(INTERP, ht, p_val);
-**/
-    }
-
-/*
+  
+/* 
 
 =item C<void unshift_string(STRING *s_val)>
 
@@ -213,15 +187,9 @@ elements will be renumbered according to insertion order.
 
 */
     VTABLE void unshift_string(STRING *s_val) {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val = pmc_new(INTERP, enum_class_String);
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
+        PMC *p_val = Parrot_pmc_new(INTERP, enum_class_String);
         VTABLE_set_string_native(INTERP, p_val, s_val);
-
-        pipp_hash_unshift(INTERP, ht, p_val);
-**/
+        SELF.unshift_pmc(p_val);
     }
 
 /*
@@ -236,15 +204,108 @@ elements will be renumbered according to insertion order.
 
 */
     VTABLE void unshift_float(FLOATVAL f_val) {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val = pmc_new(INTERP, enum_class_Float);
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
+        PMC *p_val = Parrot_pmc_new(INTERP, enum_class_Float);
         VTABLE_set_number_native(INTERP, p_val, f_val);
+        SELF.unshift_pmc(p_val);
+    }    
+    
+    
+/*
 
-        pipp_hash_unshift(INTERP, ht, p_val);
-**/
+=item C<void unshift_pmc(PMC *p_val)>
+
+Add a PMC with the value C<p_val> to the beginning of this PHPArray.  C<p_val>
+will be keyed by the INTVAL 0 and all other numerically indexed elements will
+be renumbered according to insertion order.
+
+=cut
+
+*/
+    VTABLE void unshift_pmc(PMC *p_val) {
+        Parrot_PhpArray_attributes * attrs = 
+            (Parrot_PhpArray_attributes*) PMC_data(SELF);
+        int offset = 1; //circumvent pmc2c.pl to eat the value
+        PCCINVOKE(INTERP, SELF, "reindex", INTVAL offset);
+
+        //make the new entry
+        PMC *list_entry;
+        list_entry = Parrot_pmc_new_init_int(INTERP, 
+                enum_class_FixedPMCArray, ORDERED_HASH_ITEM_MAX);
+        VTABLE_set_pmc_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_VALUE, 
+                p_val);
+        VTABLE_set_string_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_KEY, 
+                arrkeyfromint(INTERP, 0)); //phparray.c:857: warning: passing argument 4 of ‘list_entry->vtable->set_pmc_keyed_int’ from incompatible pointer type
+        //link it
+        VTABLE_set_pmc_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_PREV, 
+                PMCNULL);
+        if (SELF.elements()) {
+            VTABLE_set_pmc_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_NEXT, 
+                    attrs->first);
+            //place it in front of the linked list
+            VTABLE_set_pmc_keyed_int(INTERP, attrs->first, ORDERED_HASH_ITEM_PREV, 
+                list_entry);
+        } else {
+            VTABLE_set_pmc_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_NEXT, 
+                    PMCNULL);
+        }
+        attrs->first = list_entry;
+        //store it
+        VTABLE_set_pmc_keyed_str(INTERP, attrs->hash, arrkeyfromint(INTERP, 0), 
+                list_entry);
+    }
+
+/*
+ 
+=item C<void reindex(INTVAL offset)>
+
+This function finds all INTEGER keys in a PHPArray and resets them to their
+ordered position, with an optional offset (needed for unshifting etc). Elements
+do NOT lose their order in the array, but if they have an INTEGER key, the key   
+will be reset. (see comments on php.net/unshift for examples)
+ */
+    METHOD reindex(INTVAL offset) {
+        Parrot_PhpArray_attributes * attrs = 
+            (Parrot_PhpArray_attributes*) PMC_data(SELF);
+        char test[] = "0123456789";
+        //find how many numeric keys we have
+        INTVAL count = -1; //because we use count as new key and arrays are 0based
+        PMC * const iter_find = SELF.get_iter();
+        VTABLE_set_integer_native(INTERP, iter_find, ITERATE_FROM_START);
+        while(VTABLE_get_bool(INTERP, iter_find)) {
+            PMC * const item = VTABLE_shift_pmc(INTERP, iter_find);
+            PMC * key = VTABLE_get_pmc_keyed_int(INTERP, item, 
+                    ORDERED_HASH_ITEM_KEY);
+            char *ckey;
+            ckey = Parrot_str_to_cstring(INTERP, VTABLE_get_string(INTERP, key));
+            if (strlen(ckey) == strspn(ckey, test)) {
+                count++;
+            }
+            Parrot_str_free_cstring(ckey);
+        }
+        
+        //if count still is -1, we have no INT keys, so we return
+        if (-1 == count) return;
+        
+        /* Now INTVAL(count) knows how many integer keys we have, so lets rewind
+         * the PhpArray now, and reset the keys. Because we do it backwards now,
+         * we have no issue of creating duplicate keys which would overwrite the
+         * array values and just create one big mess
+         */
+        PMC * const iter = SELF.get_iter();
+        VTABLE_set_integer_native(INTERP, iter, ITERATE_FROM_END);//reverse iter
+        while (VTABLE_get_bool(INTERP, iter)) {
+            PMC * const item = VTABLE_pop_pmc(INTERP, iter);
+            PMC * const key = VTABLE_get_pmc_keyed_int(INTERP, item, 
+                    ORDERED_HASH_ITEM_KEY);
+            char *ckey;
+            ckey = Parrot_str_to_cstring(INTERP, VTABLE_get_string(INTERP, key));
+            if (strlen(ckey) == strspn(ckey, test)) {
+                INTVAL newkey = count + offset;
+                VTABLE_set_string_keyed_int(INTERP, item, ORDERED_HASH_ITEM_KEY, 
+                        arrkeyfromint(INTERP, newkey));
+            }
+            Parrot_str_free_cstring(ckey);
+        }
     }
 
 /*
@@ -257,35 +318,9 @@ Delete the element at the beginning of this PHPArray, returning its value as an 
 
 */
     VTABLE INTVAL shift_integer() {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        p_val = pipp_hash_shift(INTERP, ht);
-
+        PMC *p_val;
+        p_val = SELF.shift_pmc();
         return VTABLE_get_integer(INTERP, p_val);
-**/
-    }
-
-/*
-
-=item C<PMC* shift_pmc()>
-
-Delete the element at the beginning of this PHPArray, returning its value as a PMC.
-
-=cut
-
-*/
-    VTABLE PMC *shift_pmc() {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        return pipp_hash_shift(INTERP, ht);
-**/
     }
 
 /*
@@ -298,16 +333,9 @@ Delete the element at the beginning of this PHPArray, returning its value as a S
 
 */
     VTABLE STRING *shift_string() {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        p_val = pipp_hash_shift(INTERP, ht);
-
+        PMC *p_val;
+        p_val = SELF.shift_pmc();
         return VTABLE_get_string(INTERP, p_val);
-**/
     }
 
 /*
@@ -320,18 +348,34 @@ Delete the element at the beginning of this PHPArray, returning its value as a F
 
 */
     VTABLE FLOATVAL shift_float() {
-/** TODO: IMPLEMENT
-        PippHashTable *ht;
-        PMC           *p_val;
-
-        GET_ATTR_hash_table(INTERP, SELF, ht);
-
-        p_val = pipp_hash_shift(INTERP, ht);
-
+        PMC *p_val;
+        p_val = SELF.shift_pmc();
         return VTABLE_get_number(INTERP, p_val);
-**/
     }
 
+
+/*
+
+=item C<PMC* shift_pmc()>
+
+Delete the element at the beginning of this PHPArray, returning its value as a PMC.
+
+=cut
+
+*/
+    VTABLE PMC *shift_pmc() {
+        Parrot_PhpArray_attributes * attrs = 
+            (Parrot_PhpArray_attributes*) PMC_data(SELF);
+        PMC * retval = VTABLE_get_pmc_keyed_int(INTERP, attrs->first, 
+                ORDERED_HASH_ITEM_VALUE);
+        PMC * key = VTABLE_get_pmc_keyed_int(INTERP, attrs->first,
+                ORDERED_HASH_ITEM_KEY);
+        SELF.delete_keyed(key);
+        int offset = 0; //circumvent pmc2c.pl to eat the value
+        PCCINVOKE(INTERP, SELF, "reindex", INTVAL offset);
+        return retval;
+    }    
+    
 /*
 
 =item C<STRING* name()>
@@ -396,7 +440,7 @@ PHPArray, just make a clone.
             Hash * const my_hash = (Hash *)VTABLE_get_pointer(INTERP, attrs->hash);
         if (my_hash)
             Parrot_hash_destroy(INTERP, my_hash);
-            PMC *iter = VTABLE_get_iter(INTERP, src);
+            PMC * const iter = VTABLE_get_iter(INTERP, src);
 
             while (VTABLE_get_bool(INTERP, iter)) {
                 PMC    *key        = VTABLE_shift_pmc(INTERP, iter);
