@@ -48,7 +48,66 @@ Create new instance of PhpArray
 =cut
 
 */
+    VTABLE STRING *get_repr() {
+        Parrot_PhpArray_attributes * const attrs =
+            (Parrot_PhpArray_attributes*) PMC_data(SELF);
+        
+        PMC * const iter = SELF.get_iter();
+        PMC * const sb   = Parrot_pmc_new(INTERP, enum_class_StringBuilder);
+        const INTVAL n   = VTABLE_elements(INTERP, SELF);
 
+        VTABLE_set_integer_native(INTERP, iter, ITERATE_FROM_START);
+        while (VTABLE_get_bool(INTERP, iter)) {
+            PMC * const item = VTABLE_shift_pmc(INTERP, iter);
+            //PMC * const item = SELF.get_pmc_keyed(hashkey);
+            STRING *repr = VTABLE_get_repr(INTERP, item);
+            char *cstring = Parrot_str_to_cstring(INTERP, repr);
+            char *swhoami = Parrot_str_to_cstring(INTERP, item->vtable->whoami);
+            fprintf(stderr, "%s%s%s%s%s", "Item(", swhoami, "): ", cstring, "\n");
+            Parrot_str_free_cstring(cstring);
+            Parrot_str_free_cstring(swhoami);
+            
+            
+            PMC *prev = VTABLE_get_pmc_keyed_int(INTERP, item,
+                    ORDERED_HASH_ITEM_PREV);
+            if (PMC_IS_NULL(prev)) {
+                VTABLE_push_string(INTERP, sb, CONST_STRING(INTERP, "{"));
+            }
+            STRING * const key = VTABLE_get_string(INTERP, VTABLE_get_pmc_keyed_int(INTERP, item,
+                    ORDERED_HASH_ITEM_KEY));
+            const INTVAL   len = STRING_length(key);
+            const INTVAL   idx = STRING_find_not_cclass(interp, enum_cclass_numeric,
+                                         key, 0, len);
+
+            if (idx >= len) {
+                /* Only digits */
+                VTABLE_push_string(INTERP, sb, key);
+            }
+            else {
+                VTABLE_push_string(INTERP, sb, CONST_STRING(INTERP, "'"));
+                VTABLE_push_string(INTERP, sb, key);
+                VTABLE_push_string(INTERP, sb, CONST_STRING(INTERP, "'"));
+            }
+            
+            PMC * const val = VTABLE_get_pmc_keyed_int(INTERP, item,
+                    ORDERED_HASH_ITEM_VALUE);
+            
+            VTABLE_push_string(INTERP, sb, CONST_STRING(INTERP, ":"));
+            VTABLE_push_string(INTERP, sb, VTABLE_get_repr(INTERP, val));
+            if (PMC_IS_NULL(VTABLE_get_pmc_keyed_int(INTERP, item,
+                    ORDERED_HASH_ITEM_PREV))) {
+                VTABLE_push_string(INTERP, sb, CONST_STRING(INTERP, "}"));
+            } else {
+                VTABLE_push_string(INTERP, sb, CONST_STRING(INTERP, ","));
+            }
+        }
+        STRING *repr = VTABLE_get_string(INTERP, sb);
+        char *cstring = Parrot_str_to_cstring(INTERP, repr);
+        fprintf(stderr, "%s", cstring);
+        Parrot_str_free_cstring(cstring);
+        return repr;
+    }
+    
     VTABLE void init() {
         Parrot_PhpArray_attributes * const attrs =
             (Parrot_PhpArray_attributes*) PMC_data(SELF);
@@ -83,14 +142,16 @@ In any other case, an exception will be thrown.
     
     
     VTABLE PMC *get_pmc_keyed_int(INTVAL idx) {
-        return SELF.get_pmc_keyed_str(arrkeyfromint(INTERP, idx));
+        PMC *skey = Parrot_pmc_new(INTERP, enum_class_String);
+        VTABLE_set_string_native(INTERP, skey, arrkeyfromint(INTERP, idx));
+        return SELF.get_pmc_keyed(skey);
     }
     
     VTABLE void set_pmc_keyed_int(INTVAL idx, PMC *val) {
-        SELF.set_pmc_keyed_str(arrkeyfromint(INTERP, idx), val);
-        //char *cstring = Parrot_str_to_cstring(INTERP, arrkeyfromint(INTERP, idx));
-        //fprintf(stderr, "%s%s", "Stored key: ",  cstring);
-        //Parrot_str_free_cstring(cstring);
+        PMC *skey = Parrot_pmc_new(INTERP, enum_class_String);
+        VTABLE_set_string_native(INTERP, skey, arrkeyfromint(INTERP, idx));
+        SELF.set_pmc_keyed(skey, val);
+
     }
     
     
@@ -228,17 +289,19 @@ be renumbered according to insertion order.
         PCCINVOKE(INTERP, SELF, "reindex", INTVAL offset);
 
         //make the new entry
-        PMC *list_entry;
+        PMC *list_entry, *skey;
+        skey = Parrot_pmc_new(INTERP, enum_class_String);
+        VTABLE_set_string_native(INTERP, skey, arrkeyfromint(INTERP, 0));
         list_entry = Parrot_pmc_new_init_int(INTERP, 
                 enum_class_FixedPMCArray, ORDERED_HASH_ITEM_MAX);
         VTABLE_set_pmc_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_VALUE, 
                 p_val);
-        VTABLE_set_string_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_KEY, 
-                arrkeyfromint(INTERP, 0)); //phparray.c:857: warning: passing argument 4 of ‘list_entry->vtable->set_pmc_keyed_int’ from incompatible pointer type
+        VTABLE_set_pmc_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_KEY, 
+                skey); //phparray.c:857: warning: passing argument 4 of ‘list_entry->vtable->set_pmc_keyed_int’ from incompatible pointer type
         //link it
         VTABLE_set_pmc_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_PREV, 
                 PMCNULL);
-        if (SELF.elements()) {
+        if (SELF.elements() > 0) {
             VTABLE_set_pmc_keyed_int(INTERP, list_entry, ORDERED_HASH_ITEM_NEXT, 
                     attrs->first);
             //place it in front of the linked list
@@ -250,8 +313,7 @@ be renumbered according to insertion order.
         }
         attrs->first = list_entry;
         //store it
-        VTABLE_set_pmc_keyed_str(INTERP, attrs->hash, arrkeyfromint(INTERP, 0), 
-                list_entry);
+        VTABLE_set_pmc_keyed(INTERP, attrs->hash, skey, list_entry);
     }
 
 /*
@@ -301,8 +363,10 @@ will be reset. (see comments on php.net/unshift for examples)
             ckey = Parrot_str_to_cstring(INTERP, VTABLE_get_string(INTERP, key));
             if (strlen(ckey) == strspn(ckey, test)) {
                 INTVAL newkey = count + offset;
-                VTABLE_set_string_keyed_int(INTERP, item, ORDERED_HASH_ITEM_KEY, 
-                        arrkeyfromint(INTERP, newkey));
+                PMC *skey;
+                skey = Parrot_pmc_new(INTERP, enum_class_String);
+                VTABLE_set_string_native(INTERP, skey, arrkeyfromint(INTERP, newkey));
+                VTABLE_set_pmc_keyed_int(INTERP, item, ORDERED_HASH_ITEM_KEY, skey);
             }
             Parrot_str_free_cstring(ckey);
         }

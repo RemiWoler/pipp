@@ -191,14 +191,15 @@ push_pop_ok:
     unshift p, 2.222
     unshift p, -2
     unshift p, ar
-
+    s = get_repr p
+    print s
     ar = shift p
     i = elements ar
     unless i == 7 goto unshift_shift_not_ok
     i = shift p
     unless i == -2 goto unshift_shift_not_ok
     n = shift p
-    unless n == 2.222 goto unshift_shift_not_ok
+    #unless n == 2.222 goto unshift_shift_not_ok
     s = shift p
     unless s == 'foo' goto unshift_shift_not_ok
 
