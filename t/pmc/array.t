@@ -149,17 +149,20 @@ basic_set_get_ok:
 .end
 
 .sub stack_and_queue_ops
-    .local pmc p, ar
-    .local int is_ok, i
+    .local pmc p, ar, br
+    .local int is_ok, i, itest
     .local string s
+    .local string stest
     .local num n
 
     p = new 'PhpArray'
     ar = new 'ResizableIntegerArray'
+    br = new 'ResizableIntegerArray'
     ar[0] = 1234321
     ar[6] = 9876543
 
     is_ok = 1
+    itest = 1
     push p, "foo"
     push p, 2.222
     push p, -2
@@ -185,24 +188,41 @@ push_pop_ok:
     ok(is_ok, "push/pop with various values")
 
     p = new 'PhpArray'
+    print itest
     is_ok = 1
 
     unshift p, "foo"
     unshift p, 2.222
-    unshift p, -2
+    unshift p, 99
     unshift p, ar
-    s = get_repr p
-    print s
-    ar = shift p
-    i = elements ar
+    i = elements p
+    print i
+    print "-=-"
+    br = shift p
+    print br
+    i = elements br
     unless i == 7 goto unshift_shift_not_ok
-    i = shift p
-    unless i == -2 goto unshift_shift_not_ok
-    n = shift p
-    #unless n == 2.222 goto unshift_shift_not_ok
-    s = shift p
-    unless s == 'foo' goto unshift_shift_not_ok
 
+    i = shift p
+    print "{"
+    print i
+    print "}"
+    unless i == 99 goto unshift_shift_not_ok
+    itest = 3
+    print itest
+    n = shift p
+    print n
+    n = shift p
+    print n
+    print "\n"
+    unless n == 2.222 goto unshift_shift_not_ok
+    itest = 4
+    print itest
+    s = shift p
+    print s
+    unless s == "foo" goto unshift_shift_not_ok
+    itest = 5
+    print itest
     goto unshift_shift_ok
 
 unshift_shift_not_ok:

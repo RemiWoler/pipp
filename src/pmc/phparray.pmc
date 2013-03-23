@@ -144,6 +144,11 @@ In any other case, an exception will be thrown.
     VTABLE PMC *get_pmc_keyed_int(INTVAL idx) {
         PMC *skey = Parrot_pmc_new(INTERP, enum_class_String);
         VTABLE_set_string_native(INTERP, skey, arrkeyfromint(INTERP, idx));
+        PMC * const sb   = Parrot_pmc_new(INTERP, enum_class_StringBuilder);
+        STRING *repr = VTABLE_get_string(INTERP, sb);
+        char *cstring = Parrot_str_to_cstring(INTERP, repr);
+        fprintf(stderr, "%s", cstring);
+        Parrot_str_free_cstring(cstring);
         return SELF.get_pmc_keyed(skey);
     }
     
@@ -151,7 +156,6 @@ In any other case, an exception will be thrown.
         PMC *skey = Parrot_pmc_new(INTERP, enum_class_String);
         VTABLE_set_string_native(INTERP, skey, arrkeyfromint(INTERP, idx));
         SELF.set_pmc_keyed(skey, val);
-
     }
     
     
@@ -367,7 +371,9 @@ will be reset. (see comments on php.net/unshift for examples)
                 skey = Parrot_pmc_new(INTERP, enum_class_String);
                 VTABLE_set_string_native(INTERP, skey, arrkeyfromint(INTERP, newkey));
                 VTABLE_set_pmc_keyed_int(INTERP, item, ORDERED_HASH_ITEM_KEY, skey);
+                count--;
             }
+
             Parrot_str_free_cstring(ckey);
         }
     }
